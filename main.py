@@ -46,9 +46,16 @@ def dashboard():
 def update_location():
     if "user_id" not in session:
         return "Nicht angemeldet", 403
+
     data = request.json
+    vehicle_id = data["vehicle_id"]
+
+    # Sicherheitscheck: Behördenfahrzeuge dürfen nicht mit "session-" beginnen
+    if vehicle_id.startswith("session-"):
+        return "Ungültige vehicle_id", 400
+
     new_location = Location(
-        vehicle_id=data["vehicle_id"],
+        vehicle_id=vehicle_id,
         latitude=data["latitude"],
         longitude=data["longitude"]
     )
@@ -72,14 +79,17 @@ def update_location_public():
     data = request.json
 
     # Session ID aus Request oder neu generieren
-    session_id = data.get("session_id") or str(uuid.uuid4())
+    session_id = data.get("session_id") or f"session-{uuid.uuid4()}"
 
     lat_user = float(data["latitude"])
     lon_user = float(data["longitude"])
 
-    # Fahrzeuge der letzten 60 Sekunden abrufen
+    # Fahrzeuge der letzten 60 Sekunden abrufen (nur Behördenfahrzeuge)
     cutoff_vehicle = datetime.utcnow() - timedelta(seconds=60)
-    vehicle_locations = Location.query.filter(Location.timestamp >= cutoff_vehicle).all()
+    vehicle_locations = Location.query.filter(
+        Location.timestamp >= cutoff_vehicle,
+        ~Location.vehicle_id.like("session-%")
+    ).all()
 
     def haversine(lat1, lon1, lat2, lon2):
         R = 6371000  # Erdradius in Metern
@@ -108,7 +118,7 @@ def update_location_public():
     # Alte Endnutzer-Einträge (älter als 10 Minuten) löschen
     cutoff_user = datetime.utcnow() - timedelta(minutes=10)
     db.session.query(Location).filter(
-        Location.vehicle_id.like("session-%"),  # optional: nur Pseudo-Sessions
+        Location.vehicle_id.like("session-%"),
         Location.timestamp < cutoff_user
     ).delete()
 

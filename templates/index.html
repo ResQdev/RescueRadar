@@ -126,46 +126,53 @@
         </h3>
     </div>
  
+<!-- Warnsound -->
+<audio id="alertSound" src="{{ url_for('static', filename='warnsound.mp3') }}"></audio>
 
  <!-- Standort-Logik -->
-<script>
+ <script>
   function generateSessionId() {
-    return 'xxxxxxx'.replace(/x/g, () => (Math.random() * 36 | 0).toString(36));
+      return 'session-' + Math.random().toString(36).substring(2, 15);
   }
 
   const sessionId = sessionStorage.getItem("session_id") || generateSessionId();
   sessionStorage.setItem("session_id", sessionId);
 
+  const audio = document.getElementById("alertSound");
+  let lastWarningState = false;
+
   function showWarning(active) {
-    const messageElement = document.getElementById("warningMessage");
-    if (active) {
-      messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
-      messageElement.className = "alert alert-danger";
-    } else {
-      messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
-      messageElement.className = "alert alert-success";
-    }
+      const messageElement = document.getElementById("warningMessage");
+      if (active) {
+          messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
+          messageElement.className = "alert alert-danger";
+          if (!lastWarningState) {
+              audio.play().catch(() => {});
+          }
+      } else {
+          messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
+          messageElement.className = "alert alert-success";
+      }
+      lastWarningState = active;
   }
 
   function sendUserLocation() {
-    navigator.geolocation.getCurrentPosition(position => {
-      fetch("/update_location_public", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        showWarning(data.nearby); // true oder false vom Server
+      navigator.geolocation.getCurrentPosition(position => {
+          fetch("/update_location_public", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                  session_id: sessionId,
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude
+              })
+          })
+          .then(response => response.json())
+          .then(data => showWarning(data.nearby));
       });
-    });
   }
 
-  setInterval(sendUserLocation, 5000); // alle 5 Sekunden
+  setInterval(sendUserLocation, 5000);
 </script>
 
 </body>
