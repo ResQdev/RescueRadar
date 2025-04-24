@@ -19,7 +19,7 @@
 - **Frontend:** HTML, CSS, JavaScript
 - **Backend:** Python (Flask)
 - **Datenbank:** MySQL (über db4free.net, via SQLAlchemy)
-- **Echtzeit:** Geolocation + Intervallabfragen (AJAX)
+- **Echtzeit:** Geolocation (WebSocket)+ Intervallabfragen (AJAX)
 - **Deployment:** Render.com
 
 ## ⚠️ Hinweise
