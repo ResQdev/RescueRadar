@@ -5,19 +5,22 @@
 ## 🔍 Funktionen
 
 - Behörden-Login mit vordefinierten Zugangsdaten
-- Einsatz-Dashboard mit Start/Stopp-Button für Standortübertragung
+- Einsatz-Dashboard mit Start/Stopp-Button für die Standortübertragung
 - Speicherung der Fahrzeugpositionen alle 2 Sekunden
-- Endbenutzeransicht mit automatischer Standorterkennung
-- Warnhinweis bei Annäherung eines Einsatzfahrzeugs (Radius: 100 Meter)
-- Automatische Löschung der Standortdaten nach Logout der Einsatzkraft
+- Endbenutzeransicht mit automatischer Standorterkennung im Browser
+- **Live-Abgleich** zwischen Einsatzfahrzeugen und Endnutzern (Radius: 100 Meter)
+- **Session-ID-Tracking** für Endnutzer ohne Login
+- **Automatische Entfernung** der Endnutzerstandorte nach 10 Minuten
+- Warnhinweis auf der Startseite bei Annäherung eines Einsatzfahrzeugs
+- Automatische Löschung der Einsatzstandorte nach Logout
 
 ## 🛠️ Tech Stack
 
-- Frontend: HTML, CSS, JavaScript
-- Backend: Python (Flask)
-- Datenbank: SQLite (via SQLAlchemy)
-- Echtzeitkommunikation: WebSockets
-- Deployment: Render.com
+- **Frontend:** HTML, CSS, JavaScript
+- **Backend:** Python (Flask)
+- **Datenbank:** MySQL (über db4free.net, via SQLAlchemy)
+- **Echtzeit:** Geolocation + Intervallabfragen (AJAX)
+- **Deployment:** Render.com
 
 ## ⚠️ Hinweise
 

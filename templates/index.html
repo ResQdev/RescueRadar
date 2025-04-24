@@ -81,7 +81,7 @@
                 <a class="nav-link active" aria-current="page" href="#">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
+                <a class="nav-link" href="https://github.com/ResQdev/RescueRadar">GitHub</a>
               </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle {{ 'show' if error }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="{{ 'true' if error else 'false' }}">
@@ -119,7 +119,7 @@
         <img src="{{ url_for('static', filename='RescueRadar_v2.png') }}" alt="RescueRadar Logo" class="radar-logo">
     </div>
 
-<!-- Warnmeldung Container --> 
+<!-- Öffentliche Warnmeldung -->
     <div class="container text-center alert-container">
         <h3 id="warningMessage" class="alert alert-success">
             ✅ Aktuell liegen keine Warnungen vor.
@@ -127,24 +127,46 @@
     </div>
  
 
- <!-- Warnmeldung erzeugen -->   
-    <script>
-        function showWarning(isWarning) {
-            let messageElement = document.getElementById("warningMessage");
-    
-            if (isWarning) {
-                messageElement.innerText = "🚨\nAchtung, Einsatzfahrzeug!\nBitte sorge für eine freie Fahrt!";
-                messageElement.className = "alert alert-danger"; // Ändert die Farbe zu Rot
-            } else {
-                messageElement.innerText = "✅\nAktuell liegen keine Warnungen vor.";
-                messageElement.className = "alert alert-success"; // Ändert die Farbe zu Grün
-            }
-        }
-    
-        // Beispiel: Die Warnung nach 5 Sekunden aktivieren
-        setTimeout(() => showWarning(true), 5000);
-        
-    </script>
-    
+ <!-- Standort-Logik -->
+<script>
+  function generateSessionId() {
+    return 'xxxxxxx'.replace(/x/g, () => (Math.random() * 36 | 0).toString(36));
+  }
+
+  const sessionId = sessionStorage.getItem("session_id") || generateSessionId();
+  sessionStorage.setItem("session_id", sessionId);
+
+  function showWarning(active) {
+    const messageElement = document.getElementById("warningMessage");
+    if (active) {
+      messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
+      messageElement.className = "alert alert-danger";
+    } else {
+      messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
+      messageElement.className = "alert alert-success";
+    }
+  }
+
+  function sendUserLocation() {
+    navigator.geolocation.getCurrentPosition(position => {
+      fetch("/update_location_public", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        showWarning(data.nearby); // true oder false vom Server
+      });
+    });
+  }
+
+  setInterval(sendUserLocation, 5000); // alle 5 Sekunden
+</script>
+
 </body>
 </html>
