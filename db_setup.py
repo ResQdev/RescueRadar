@@ -1,10 +1,14 @@
 from flask import Flask
 from models import db, User
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # .env-Datei laden
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://rr_admin:Sch4ll3riku5@db4free.net/rescueradar_db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.secret_key = "supergeheim"
+app.secret_key = os.getenv("SECRET_KEY", "fallback_secret")
 
 db.init_app(app)
 
@@ -29,3 +33,4 @@ with app.app_context():
         db.session.add(user)
     db.session.commit()
     print("🚨 Datenbank und Benutzer erfolgreich erstellt.")
+
