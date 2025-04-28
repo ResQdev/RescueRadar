@@ -1,5 +1,30 @@
 # Changelog
 
+## [v0.3.0] - 2025-04-28
+
+### ✨ Neue Features
+- Neuer **Tracking-Button** auf der Startseite: Endnutzer können nun das Standort-Tracking **manuell starten und beenden**.
+- **Button-Status**: Wechsel zwischen „Starten“ (grün) und „Beenden“ (rot) mit fetter Beschriftung.
+- Verbesserung der Benutzerkontrolle und Kompatibilität speziell für iOS-Geräte (Audio-Freigabe bei User-Interaktion).
+
+### 🔧 Verbesserungen
+- Backend-Zeitmanagement wurde modernisiert:
+  - Nutzung von **timezone-aware** Timestamps (`datetime.now(timezone.utc)`).
+  - `timestamp`-Spalte der `location`-Tabelle auf `TIMESTAMP` Typ in MySQL umgestellt.
+  - `models.py` aktualisiert: `timestamp = db.Column(db.DateTime(timezone=True))`.
+
+### 🐛 Bugfixes
+- Entfernung von `DeprecationWarning` bei Verwendung von `datetime.utcnow()`.
+
+### 🧹 Cleanup
+- Kleinere Code-Aufräumarbeiten und Vereinheitlichung der Zeit- und Tracking-Logik.
+
+---
+
+## Hinweise:
+- Diese Version ist kompatibel mit zukünftigen Python-Versionen.
+- Datenbankänderung erforderlich (`ALTER TABLE location MODIFY COLUMN timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`).
+
 ## [v0.2.2] - 2025-04-25
 
 ### ✨ Verbesserungen
