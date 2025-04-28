@@ -4,7 +4,7 @@ from sqlalchemy import func
 import os
 import uuid
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone  # <--- ACHTUNG: timezone zusätzlich importieren!
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "fallback_if_missing")
@@ -85,7 +85,7 @@ def update_location_public():
     lon_user = float(data["longitude"])
 
     # Fahrzeuge der letzten 60 Sekunden abrufen (nur Behördenfahrzeuge)
-    cutoff_vehicle = datetime.utcnow() - timedelta(seconds=60)
+    cutoff_vehicle = datetime.now(timezone.utc) - timedelta(seconds=60)
     vehicle_locations = Location.query.filter(
         Location.timestamp >= cutoff_vehicle,
         ~Location.vehicle_id.like("session-%")
@@ -116,7 +116,7 @@ def update_location_public():
     db.session.add(user_entry)
 
     # Alte Endnutzer-Einträge (älter als 10 Minuten) löschen
-    cutoff_user = datetime.utcnow() - timedelta(minutes=10)
+    cutoff_user = datetime.now(timezone.utc) - timedelta(minutes=10)
     db.session.query(Location).filter(
         Location.vehicle_id.like("session-%"),
         Location.timestamp < cutoff_user

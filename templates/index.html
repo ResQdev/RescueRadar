@@ -11,6 +11,7 @@
             height: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
         }
 
         .radar-container {
@@ -19,9 +20,15 @@
             left: 50%;
             transform: translate(-50%, -50%);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 200px;
+            justify-content: center;
+        }
+
+        .radar-wrapper {
+            position: relative;
+            width: 150px;
+            height: 150px;
         }
 
         .radar {
@@ -29,9 +36,11 @@
             height: 150px;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 30%, rgba(0,0,0,0) 70%);
-            position: relative;
-            border: 2px solid rgba(112, 112, 112, 0.1); 
+            border: 2px solid rgba(112, 112, 112, 0.1);
             overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .radar::before {
@@ -50,10 +59,19 @@
         }
 
         .radar-logo {
-            position: absolute;
             width: 80px;
             height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 2;
+        }
+
+        .tracking-button {
+            margin-top: 20px;
+            width: 55%;
+            font-weight: bold;
         }
 
         .alert-container {
@@ -63,6 +81,11 @@
             right: 10%;
             width: 80%;
             text-align: center;
+        }
+
+        .dropdown-menu {
+            z-index: 1050;
+            background-color: white;
         }
     </style>
 </head>
@@ -106,9 +129,12 @@
 </nav>
 
 <!-- Radar-Container -->
-<div class="radar-container my-4">
-    <div class="radar"></div>
-    <img src="{{ url_for('static', filename='RescueRadar_v2.png') }}" alt="RescueRadar Logo" class="radar-logo">
+<div class="radar-container">
+    <div class="radar-wrapper">
+        <div class="radar"></div>
+        <img src="{{ url_for('static', filename='RescueRadar_v2.png') }}" alt="RescueRadar Logo" class="radar-logo">
+    </div>
+    <button id="trackingButton" class="btn btn-success tracking-button">Starten</button>
 </div>
 
 <!-- Öffentliche Warnmeldung -->
@@ -122,48 +148,64 @@
 <audio id="alertSound" src="{{ url_for('static', filename='warnsound.mp3') }}"></audio>
 
 <script>
-  let sessionId = "{{ session.get('vehicle_id', '') }}";
+  let trackingActive = false;
+  let trackingInterval = null;
+  const audio = document.getElementById("alertSound");
+  let lastWarningState = false;
 
+  let sessionId = "{{ session.get('vehicle_id', '') }}";
   if (!sessionId) {
     sessionId = sessionStorage.getItem("session_id") || 'session-' + Math.random().toString(36).substring(2, 15);
     sessionStorage.setItem("session_id", sessionId);
   }
 
-  const audio = document.getElementById("alertSound");
-  let lastWarningState = false;
+  document.getElementById("trackingButton").addEventListener("click", () => {
+    trackingActive = !trackingActive;
+    const button = document.getElementById("trackingButton");
+    button.textContent = trackingActive ? "Beenden" : "Starten";
+    button.className = trackingActive ? "btn btn-danger tracking-button" : "btn btn-success tracking-button";
+
+    if (trackingActive) {
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {});
+      trackingInterval = setInterval(sendUserLocation, 5000);
+    } else {
+      clearInterval(trackingInterval);
+    }
+  });
 
   function showWarning(active) {
-      const messageElement = document.getElementById("warningMessage");
-      if (active) {
-          messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
-          messageElement.className = "alert alert-danger";
-          if (!lastWarningState) {
-              audio.play().catch(() => {});
-          }
-      } else {
-          messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
-          messageElement.className = "alert alert-success";
+    const messageElement = document.getElementById("warningMessage");
+    if (active) {
+      messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
+      messageElement.className = "alert alert-danger";
+      if (!lastWarningState) {
+        audio.play().catch(() => {});
       }
-      lastWarningState = active;
+    } else {
+      messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
+      messageElement.className = "alert alert-success";
+    }
+    lastWarningState = active;
   }
 
   function sendUserLocation() {
-      navigator.geolocation.getCurrentPosition(position => {
-          fetch("/update_location_public", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                  session_id: sessionId,
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude
-              })
-          })
-          .then(response => response.json())
-          .then(data => showWarning(data.nearby));
-      });
+    navigator.geolocation.getCurrentPosition(position => {
+      fetch("/update_location_public", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+      })
+      .then(response => response.json())
+      .then(data => showWarning(data.nearby));
+    });
   }
-
-  setInterval(sendUserLocation, 5000);
 </script>
 </body>
 </html>

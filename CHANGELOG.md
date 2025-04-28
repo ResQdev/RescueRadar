@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.2.2] - 2025-04-25
+
+### ✨ Verbesserungen
+- Dashboard für mobile Nutzung optimiert:
+  - Überschrift "Dashboard" fixiert und hervorgehoben.
+  - Fahrzeug-ID mittig (horizontal & vertikal) angezeigt.
+  - Start/Stop-Button und Logout-Button fixiert am unteren Bildschirmrand, mit gleichmäßiger Breite und Touch-Optimierung.
+
 ## [v0.2.1] - 2025-04-24
 
 ### ✨ Verbesserungen

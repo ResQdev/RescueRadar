@@ -13,5 +13,4 @@ class Location(db.Model):
     vehicle_id = db.Column(db.String(50), nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, server_default=db.func.now())
-
+    timestamp = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
