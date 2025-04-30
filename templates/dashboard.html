@@ -1,120 +1,125 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-        let tracking = false;
-        let trackingInterval = null;
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
 
-        function toggleTracking(vehicleId) {
-            tracking = !tracking;
+    body {
+      display: flex;
+      flex-direction: column;
+    }
 
-            const button = document.getElementById("radarButton");
-            button.textContent = tracking ? "Einsatz beenden" : "Einsatz starten";
-            button.className = tracking ? "btn btn-danger w-100 py-3" : "btn btn-success w-100 py-3";
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      background-color: white;
+      z-index: 1000;
+      padding: 1rem 0;
+      border-bottom: 1px solid #ccc;
+    }
 
-            if (tracking) {
-                trackingInterval = setInterval(() => {
-                    navigator.geolocation.getCurrentPosition(position => {
-                        fetch("/update_location", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                vehicle_id: vehicleId,
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
-                            })
-                        });
-                    });
-                }, 2000);
-            } else {
-                clearInterval(trackingInterval);
-            }
-        }
-    </script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
+    header h2 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 0;
+    }
 
-        body {
-            display: flex;
-            flex-direction: column;
-        }
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 80px;
+      padding-bottom: 120px;
+    }
 
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            text-align: center;
-            background-color: white;
-            z-index: 1000;
-            padding: 1rem 0;
-            border-bottom: 1px solid #ccc;
-        }
+    .vehicle-id {
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-align: center;
+    }
 
-        header h2 {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0;
-        }
+    .bottom-buttons {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+      gap: 10px;
+    }
 
-        .main-content {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding-top: 80px; /* Platz für die fixe Überschrift */
-            padding-bottom: 120px; /* Platz für Buttons unten */
-        }
+    .bottom-buttons > * {
+      flex: 1;
+    }
 
-        .vehicle-id {
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .bottom-buttons {
-            position: fixed;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 10px;
-            gap: 10px;
-        }
-
-        .bottom-buttons > * {
-            flex: 1;
-        }
-
-        .btn {
-            font-size: 1.2rem;
-            padding: 1rem;
-        }
-    </style>
+    .btn {
+      font-size: 1.2rem;
+      padding: 1rem;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h2>Dashboard</h2>
-    </header>
+  <header>
+    <h2>Dashboard</h2>
+  </header>
 
-    <div class="main-content">
-        <div class="vehicle-id">Fahrzeug: {{ vehicle_id }}</div>
-    </div>
+  <div class="main-content">
+    <div class="vehicle-id">Fahrzeug: {{ vehicle_id }}</div>
+  </div>
 
-    <div class="bottom-buttons">
-        <button id="radarButton" class="btn btn-success" onclick="toggleTracking('{{ vehicle_id }}')">
-            Einsatz starten
-        </button>
-        <form method="POST" action="/logout">
-            <button type="submit" class="btn btn-danger w-100">Logout</button>
-        </form>
-    </div>
+  <div class="bottom-buttons">
+    <button id="radarButton" class="btn btn-success">Einsatz starten</button>
+    <form method="POST" action="/logout">
+      <button type="submit" class="btn btn-danger w-100">Logout</button>
+    </form>
+  </div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      let tracking = false;
+      let trackingInterval = null;
+      const button = document.getElementById("radarButton");
+      const vehicleId = "{{ vehicle_id }}";
+      const socket = io();
+
+      button.addEventListener("click", () => {
+        tracking = !tracking;
+        button.textContent = tracking ? "Einsatz beenden" : "Einsatz starten";
+        button.className = tracking ? "btn btn-danger w-100 py-3" : "btn btn-success w-100 py-3";
+
+        if (tracking) {
+          trackingInterval = setInterval(() => {
+            navigator.geolocation.getCurrentPosition(position => {
+              socket.emit("vehicle_location_update", {
+                vehicle_id: vehicleId,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+              });
+            });
+          }, 2000);
+        } else {
+          clearInterval(trackingInterval);
+          // Standortdaten bei Einsatzende löschen
+          fetch("/stop_mission", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vehicle_id: vehicleId })
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

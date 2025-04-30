@@ -1,11 +1,25 @@
 # Changelog
 
+## [1.0.0] - 2025-04-30
+### Neue Features
+- Echtzeit-Standortübertragung via WebSocket
+- Admin-Portal mit Benutzerverwaltung
+- Öffentliche Warnung und Audioausgabe bei Annäherung von Einsatzfahrzeugen
+
+### Removed
+- Veraltete REST-Route /update_location_public
+- REST-Route /update_location für Behördenfahrzeuge ersetzt durch WebSocket
+
+### Changed
+- Frontend (index.html & dashboard.html) vollständig WebSocket-basiert
+
 ## [v0.3.0] - 2025-04-28
 
 ### ✨ Neue Features
 - Neuer **Tracking-Button** auf der Startseite: Endnutzer können nun das Standort-Tracking **manuell starten und beenden**.
 - **Button-Status**: Wechsel zwischen „Starten“ (grün) und „Beenden“ (rot) mit fetter Beschriftung.
 - Verbesserung der Benutzerkontrolle und Kompatibilität speziell für iOS-Geräte (Audio-Freigabe bei User-Interaktion).
+- neue Warntöne in /static hinzugefügt, die aktuell über die index.html geändert werden können.
 
 ### 🔧 Verbesserungen
 - Backend-Zeitmanagement wurde modernisiert:
