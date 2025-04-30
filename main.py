@@ -84,31 +84,38 @@ def handle_public_location(data):
     session_id = data.get("session_id")
     lat_user = data.get("latitude")
     lon_user = data.get("longitude")
+
     if not session_id or not lat_user or not lon_user:
+        print("⚠️ Ungültige Standortdaten empfangen", flush=True)
         return
 
-    # Standort des Nutzers speichern
+    print(f"📥 Standort erhalten von {session_id}: {lat_user}, {lon_user}", flush=True)
+
+    # Standort speichern
     entry = Location(vehicle_id=session_id, latitude=lat_user, longitude=lon_user)
     db.session.add(entry)
 
-    # Alte Nutzerdaten sicher löschen (kein bulk-delete wegen Deadlock)
+    # Alte Nutzer-Daten löschen (kein bulk-delete)
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
     old_entries = Location.query.filter(
         Location.vehicle_id.like("session-%"),
         Location.timestamp < cutoff
     ).all()
 
+    deleted_count = 0
     for old in old_entries:
         db.session.delete(old)
+        deleted_count += 1
 
-    # Fahrzeuge der letzten 60 Sekunden abrufen
+    print(f"🧹 Alte Nutzerdaten gelöscht: {deleted_count}", flush=True)
+
+    # Fahrzeuge der letzten 60 Sekunden
     cutoff_vehicle = datetime.now(timezone.utc) - timedelta(seconds=60)
     vehicles = Location.query.filter(
         Location.timestamp >= cutoff_vehicle,
         ~Location.vehicle_id.like("session-%")
     ).all()
 
-    # Entfernungsprüfung
     def haversine(lat1, lon1, lat2, lon2):
         R = 6371000
         phi1, phi2 = math.radians(lat1), math.radians(lat2)
@@ -118,7 +125,10 @@ def handle_public_location(data):
         return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     for v in vehicles:
-        if haversine(lat_user, lon_user, v.latitude, v.longitude) <= 100:
+        distance = haversine(lat_user, lon_user, v.latitude, v.longitude)
+        print(f"📏 Distanz zu {v.vehicle_id}: {distance:.2f} m", flush=True)
+        if distance <= 100:
+            print(f"🚨 WARNUNG an {session_id} — Fahrzeug in der Nähe: {v.vehicle_id}", flush=True)
             emit("warn_user", {"nearby": True}, to=session_id)
             break
 
