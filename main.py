@@ -17,6 +17,10 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "fallback_if_missing")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,       # prüft vor jedem Query ob die Verbindung noch lebt
+    "pool_recycle": 280          # recycelt Verbindungen vor Ablauf (Sekunden)
+}
 
 db.init_app(app)
 socketio = SocketIO(app, async_mode="eventlet")
