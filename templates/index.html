@@ -154,7 +154,7 @@
     sessionStorage.setItem("session_id", sessionId);
 
     // WebSocket-Verbindung aufbauen und session_id übergeben
-    const socket = io({ query: { session_id: sessionId } });
+    const socket = io();
 
     // Warnung empfangen, wenn ein Einsatzfahrzeug in der Nähe ist
     socket.on("warn_user", (data) => {
