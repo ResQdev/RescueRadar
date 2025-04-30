@@ -196,18 +196,31 @@
     });
 
     // Sichtbare Warnmeldung anzeigen
+    let warningResetTimeout = null;
+
     function showWarning(active) {
       const messageElement = document.getElementById("warningMessage");
       if (active) {
         messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
         messageElement.className = "alert alert-danger";
+
+        // Nur abspielen, wenn vorher kein Alarm war
         if (!lastWarningState) {
           audio.play().catch(() => {});
         }
+
+        // Entwarnung automatisch nach 10 Sekunden
+        clearTimeout(warningResetTimeout);
+        warningResetTimeout = setTimeout(() => {
+          showWarning(false);
+        }, 10000); // 10 Sekunden
+
       } else {
         messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
         messageElement.className = "alert alert-success";
+        clearTimeout(warningResetTimeout);
       }
+
       lastWarningState = active;
     }
 
