@@ -86,19 +86,29 @@ def handle_public_location(data):
     lon_user = data.get("longitude")
     if not session_id or not lat_user or not lon_user:
         return
+
+    # Standort des Nutzers speichern
     entry = Location(vehicle_id=session_id, latitude=lat_user, longitude=lon_user)
     db.session.add(entry)
+
+    # Alte Nutzerdaten sicher löschen (kein bulk-delete wegen Deadlock)
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
-    Location.query.filter(
+    old_entries = Location.query.filter(
         Location.vehicle_id.like("session-%"),
         Location.timestamp < cutoff
-    ).delete()
+    ).all()
+
+    for old in old_entries:
+        db.session.delete(old)
+
+    # Fahrzeuge der letzten 60 Sekunden abrufen
     cutoff_vehicle = datetime.now(timezone.utc) - timedelta(seconds=60)
     vehicles = Location.query.filter(
         Location.timestamp >= cutoff_vehicle,
         ~Location.vehicle_id.like("session-%")
     ).all()
 
+    # Entfernungsprüfung
     def haversine(lat1, lon1, lat2, lon2):
         R = 6371000
         phi1, phi2 = math.radians(lat1), math.radians(lat2)
