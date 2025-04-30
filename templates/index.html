@@ -150,23 +150,8 @@
     let lastWarningState = false;
 
     // Eindeutige ID für Endnutzer-Session erzeugen oder abrufen
-    let sessionId = sessionStorage.getItem("session_id") || 'session-' + Math.random().toString(36).substring(2, 15);
-    sessionStorage.setItem("session_id", sessionId);
-    // WebSocket-Verbindung aufbauen und session_id übergeben
-    const socket = io({ query: { session_id: sessionId } });
-
-    // Warnung empfangen, wenn ein Einsatzfahrzeug in der Nähe ist
-    socket.on("warn_user", (data) => {
-      console.log("🚨 WARNUNG vom Server erhalten:", data);
-      if (data.nearby) {
-        showWarning(true);
-      }
-    });
-
-    // Optionales Logging für empfangene Bestätigung vom Server
-    socket.on("location_saved", (data) => {
-      console.log("Standort gespeichert:", data);
-    });
+    let sessionId = null;
+    let socket = null;
 
     // Button „Starten / Beenden“ klickbar machen
     document.getElementById("trackingButton").addEventListener("click", () => {
@@ -176,22 +161,52 @@
       button.className = trackingActive ? "btn btn-danger tracking-button" : "btn btn-success tracking-button";
 
       if (trackingActive) {
+  // Session-ID nur erzeugen, wenn noch nicht vorhanden
+        if (!sessionId) {
+          sessionId = 'session-' + Math.random().toString(36).substring(2, 15);
+          sessionStorage.setItem("session_id", sessionId);
+
+          socket = io({ query: { session_id: sessionId } });
+
+          socket.on("warn_user", (data) => {
+            console.log("🚨 WARNUNG vom Server erhalten:", data);
+            if (data.nearby) {
+              showWarning(true);
+            }
+          });
+
+          socket.on("location_saved", (data) => {
+            console.log("📍 Standort gespeichert:", data);
+          });
+        }
+
         // Startsignal abspielen
         audio.play().then(() => {
           audio.pause();
           audio.currentTime = 0;
         }).catch(() => {});
-        // Standort regelmäßig senden
+
         trackingInterval = setInterval(sendUserLocation, 5000);
+
       } else {
-        // Standortübertragung beenden
         clearInterval(trackingInterval);
-        // Eintrag aus Datenbank löschen
-        fetch("/stop_tracking", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId })
-        });
+
+        if (sessionId) {
+          fetch("/stop_tracking", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId })
+          });
+        }
+
+        // Session aufräumen
+        sessionStorage.removeItem("session_id");
+        sessionId = null;
+
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
       }
     });
 
