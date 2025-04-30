@@ -61,13 +61,25 @@ def logout():
 def stop_mission():
     if "user_id" not in session:
         return "Nicht angemeldet", 403
+
     data = request.json
     vehicle_id = data.get("vehicle_id")
+
     if vehicle_id != session.get("vehicle_id"):
         return "Falsche Fahrzeug-ID", 403
-    Location.query.filter_by(vehicle_id=vehicle_id).delete()
+
+    # sicheres Löschen über ORM
+    entries = Location.query.filter_by(vehicle_id=vehicle_id).all()
+    deleted_count = 0
+    for e in entries:
+        db.session.delete(e)
+        deleted_count += 1
+
     db.session.commit()
+    print(f"🗑️ Einsatzdaten gelöscht: {deleted_count} Einträge für Fahrzeug {vehicle_id}", flush=True)
+
     return "OK", 200
+
 
 @app.route("/stop_tracking", methods=["POST"])
 def stop_tracking():
@@ -158,7 +170,7 @@ def on_connect():
         print(f"🔗 WebSocket verbunden und Session-ID '{session_id}' dem Raum beigetreten", flush=True)
     else:
         print("⚠️ Keine session_id beim Verbindungsaufbau übergeben", flush=True)
-        
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # 5000 als Fallback für lokalen Betrieb
     socketio.run(app, host="0.0.0.0", port=port)
