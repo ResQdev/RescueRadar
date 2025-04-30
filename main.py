@@ -2,7 +2,7 @@ import eventlet
 eventlet.monkey_patch()
 
 from flask import Flask, render_template, request, redirect, url_for, session
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 from models import db, User, Location
 from sqlalchemy import func
 import os
@@ -150,6 +150,15 @@ def handle_vehicle_location(data):
 
     emit("location_saved", {"status": "ok"})
 
+@socketio.on("connect")
+def on_connect():
+    session_id = request.args.get("session_id")
+    if session_id:
+        join_room(session_id)
+        print(f"🔗 WebSocket verbunden und Session-ID '{session_id}' dem Raum beigetreten", flush=True)
+    else:
+        print("⚠️ Keine session_id beim Verbindungsaufbau übergeben", flush=True)
+        
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # 5000 als Fallback für lokalen Betrieb
     socketio.run(app, host="0.0.0.0", port=port)

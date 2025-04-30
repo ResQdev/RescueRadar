@@ -152,9 +152,8 @@
     // Eindeutige ID für Endnutzer-Session erzeugen oder abrufen
     let sessionId = sessionStorage.getItem("session_id") || 'session-' + Math.random().toString(36).substring(2, 15);
     sessionStorage.setItem("session_id", sessionId);
-
     // WebSocket-Verbindung aufbauen und session_id übergeben
-    const socket = io();
+    const socket = io({ query: { session_id: sessionId } });
 
     // Warnung empfangen, wenn ein Einsatzfahrzeug in der Nähe ist
     socket.on("warn_user", (data) => {
