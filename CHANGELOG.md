@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.3-rollback] - 2025-04-30
+### Geändert
+- WebSocket-Integration vollständig entfernt
+- Rückkehr zur stabilen REST-basierten Standortübertragung
+- Datenbankbereinigung bei Einsatzende erneut zuverlässig
+
 ## [v1.0.2] - 2025-04-30
 
 - 🚦 **Session-ID-Erzeugung** für Endnutzer nur noch bei aktiver Standortübertragung
@@ -9,6 +15,11 @@
 - 🛠️ Diverse kleinere UI-Verbesserungen und Konsolenlogs für Debugging
 
 Diese Version verbessert die Effizienz und Benutzerfreundlichkeit im Live-Betrieb erheblich.
+## [1.0.3-rollback] - 2025-04-30
+### Geändert
+- WebSocket-Integration vollständig entfernt
+- Rückkehr zur stabilen REST-basierten Standortübertragung
+- Datenbankbereinigung bei Einsatzende erneut zuverlässig
 
 ## [v1.0.1]
 
