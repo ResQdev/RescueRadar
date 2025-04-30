@@ -1,6 +1,38 @@
 # Changelog
 
-## [1.0.0] - 2025-04-30
+## [v1.0.2] - 2025-04-30
+
+- 🚦 **Session-ID-Erzeugung** für Endnutzer nur noch bei aktiver Standortübertragung
+- ❌ **Alte Sessions** werden nach "Beenden" vollständig entfernt
+- 📡 **WebSocket-Verbindung** wird dynamisch aufgebaut und sauber beendet
+- 🔊 **Warnmeldung verschwindet automatisch** nach 10 Sekunden, wenn kein Fahrzeug mehr erkannt wird
+- 🛠️ Diverse kleinere UI-Verbesserungen und Konsolenlogs für Debugging
+
+Diese Version verbessert die Effizienz und Benutzerfreundlichkeit im Live-Betrieb erheblich.
+
+## [v1.0.1]
+
+### 🚀 Neue Funktionen
+- Umstellung auf **WebSocket-Kommunikation** für Standortübertragung (statt REST)
+- Echtzeitübermittlung von Fahrzeug- und Nutzerpositionen via `socket.io`
+- **Session-basierte Zuordnung**: Behördenfahrzeuge mit Login, Endnutzer mit temporärer `session-ID`
+- **Live-Radiusabgleich** mit 100 m Umkreis für Einsatzfahrzeuge
+
+### 🔔 Verbesserte Warnlogik
+- Warnmeldung (Text + Audio) bei Annäherung eines Einsatzfahrzeugs
+- Visuelle und akustische Rückmeldung auf Endnutzerseite
+- Automatische Entwarnung nach 10 Sekunden ohne neue Warnung
+
+### 🧹 Automatisches Daten-Handling
+- Automatische **Löschung von Endnutzer-Sessions** nach 10 Minuten
+- **Fahrzeug-Trackingdaten** werden nach Klick auf „Einsatz beenden“ gelöscht
+
+### 🐛 Bugfixes
+- Deadlocks bei `DELETE`-Statements vermieden (kein Bulk-Delete mehr)
+- Session-Zuweisung über `join_room()` bei WebSocket-Verbindung
+- Verbesserte iOS-Kompatibilität durch Benutzerinteraktion vor Audiowiedergabe
+
+## [v1.0.0] - 2025-04-30
 ### Neue Features
 - Echtzeit-Standortübertragung via WebSocket
 - Admin-Portal mit Benutzerverwaltung
