@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, emit
 from models import db, User, Location
@@ -16,7 +19,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode="eventlet")
 
 from admin_routes import admin_bp
 app.register_blueprint(admin_bp)
@@ -124,4 +127,5 @@ def handle_vehicle_location(data):
     emit("location_saved", {"status": "ok"})
 
 if __name__ == "__main__":
-    socketio.run(app)
+    port = int(os.environ.get("PORT", 5000))  # 5000 als Fallback für lokalen Betrieb
+    socketio.run(app, host="0.0.0.0", port=port)
