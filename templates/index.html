@@ -158,6 +158,7 @@
 
     // Warnung empfangen, wenn ein Einsatzfahrzeug in der Nähe ist
     socket.on("warn_user", (data) => {
+      console.log("🚨 WARNUNG vom Server erhalten:", data);
       if (data.nearby) {
         showWarning(true);
       }
@@ -219,6 +220,7 @@
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         });
+        console.log("📡 Standort gesendet an Server:", position.coords);
       });
     }
   });
