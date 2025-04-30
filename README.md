@@ -6,6 +6,7 @@
 
 ## 🔍 Funktionen
 
+
 - Behörden-Login mit Zugangsdaten, die über das Admin-Portal erstellt werden können
 - Einsatz-Dashboard mit Start/Stopp-Button für die Standortübertragung
 - Speicherung der Fahrzeugpositionen alle 2 Sekunden
@@ -14,11 +15,10 @@
 - **Live-Abgleich** zwischen Einsatzfahrzeugen und Endnutzern (Radius: 100 Meter)
 - **Session-ID-Tracking** für Endnutzer ohne Login
 - **Automatische Entfernung** der Endnutzerstandorte nach Beendigung des Trackings
-- Warnhinweis auf der Startseite bei Annäherung eines Einsatzfahrzeugs im Radius von 100m
+- Warnhinweis auf der Startseite bei Annäherung eines Einsatzfahrzeugs im Radius von 100 m
 - Automatische Löschung der Standortdaten:
     - Einsatzfahrzeug: Nach "Einsatz beenden"
-    - Endnutzer: nach Beendigung des Trackings
-- **WebSocket-Übertragung** für beide Parteien (keine REST-Abfragen mehr nötig)
+    - Endnutzer: Nach Beendigung des Trackings
 - **Admin-Portal** zur Verwaltung von Benutzern und Fahrzeugen
 - **Responsive UI** für Desktop und mobile Geräte
 - **Audio-Warnung** bei Gefahrensituation
@@ -26,16 +26,16 @@
 ## 🛠️ Tech Stack
 
 - **Frontend:** HTML, CSS, Bootstrap 5, JavaScript
-- **Backend:** Python 3, Flask, Flask-SocketIO
+- **Backend:** Python 3, Flask
 - **Datenbank:** SQLAlchemy + MySQL (oder SQLite für Tests)
-- **Echtzeit:** WebSockets via Flask-SocketIO
+- **Kommunikation:** REST-basierte Standortübertragung via AJAX
 
-## ⚙️ Verbesserungen seit v0.2.x
-- Standortübertragung vollständig auf WebSockets umgestellt
-- REST-Routen durch SocketIO ersetzt
-- Zeitmanagement vollständig auf UTC umgestellt (timezone=True)
-- Verbesserte iOS-Kompatibilität durch Benutzerinteraktion vor Audiowiedergabe
+## ⚙️ Letzte Verbesserungen
+- Rückkehr zur stabilen REST-Architektur (ohne WebSockets)
+- Verlässliche Datenlöschung bei Einsatzende
+- Verbesserte Browserkompatibilität und Session-Verwaltung
 - Erweiterte mobile Optimierung (responsive Radar-Ansicht)
+- Zeitmanagement vollständig auf UTC umgestellt (timezone=True)
 
 ## 🧪 Lokales Setup
 
@@ -65,7 +65,6 @@ Kennwort: *(aus deiner .env Datei)*
 ├── main.py              # Zentrale Anwendung (Flask + SocketIO)
 ├── models.py            # Datenbankmodelle
 ├── db_setup.py          # Initiales Setup für DB + Admin
-├── clear_db.py          # Tool zum Zurücksetzen der Location-Datenbank
 ├── templates/           # HTML-Dateien für Admin & UI
 ├── static/              # Warnsound, Logo, Favicon
 ├── requirements.txt     # Abhängigkeiten
@@ -76,7 +75,6 @@ Kennwort: *(aus deiner .env Datei)*
 
 - Lokale oder gehostete MySQL / SQLite
 - Kompatibel mit PythonAnywhere, Railway, Render
-- SocketIO mit `eventlet` empfohlen für Produktivbetrieb
 
 ## ⚠️ Hinweise
 
