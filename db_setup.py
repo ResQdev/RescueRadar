@@ -17,8 +17,8 @@ with app.app_context():
     db.create_all()
     print("🚨 Tabellen erstellt (ohne Benutzer) 🚨")
 
-    admin_username = os.getenv("ADMIN_USERNAME", "admin")
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    admin_username = os.getenv("ADMIN_USERNAME")
+    admin_password = os.getenv("ADMIN_PASSWORD")
     vehicle_id = "ADMIN-CTRL"
 
     # Nur hinzufügen, wenn dieser Benutzer noch nicht existiert
