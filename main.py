@@ -118,8 +118,8 @@ def update_location_public():
     )
     db.session.add(user_entry)
 
-    # Alte Endnutzer-Einträge (älter als 10 Minuten) löschen
-    cutoff_user = datetime.now(timezone.utc) - timedelta(minutes=10)
+    # Alte Endnutzer-Einträge (älter als 5 Minuten) löschen (Fallback)
+    cutoff_user = datetime.now(timezone.utc) - timedelta(minutes=5)
     db.session.query(Location).filter(
         Location.vehicle_id.like("session-%"),
         Location.timestamp < cutoff_user
@@ -129,14 +129,37 @@ def update_location_public():
 
     return jsonify({"nearby": nearby}), 200
 
+# Tracking beenden
+@app.route("/stop_tracking", methods=["POST"])
+def stop_tracking():
+    data = request.json
+    session_id = data.get("session_id")
+
+    if session_id and session_id.startswith("session-"):
+        locations = Location.query.filter_by(vehicle_id=session_id).all()
+        for loc in locations:
+            db.session.delete(loc)
+        db.session.commit()
+        return "OK", 200
+
+    return "Ungültige Session-ID", 400
+
 # Einsatzdaten löschen bei „Einsatz beenden“
 @app.route("/stop_mission", methods=["POST"])
 def stop_mission():
     if "user_id" not in session:
         return "Nicht angemeldet", 403
 
-    data = request.json
+    import json
+
+    # Unterstützung für JSON via sendBeacon (text/plain)
+    try:
+        data = request.get_json(force=True)
+    except:
+        data = json.loads(request.data.decode())
+
     vehicle_id = data.get("vehicle_id")
+
 
     if vehicle_id != session.get("vehicle_id"):
         return "Falsche Fahrzeug-ID", 403

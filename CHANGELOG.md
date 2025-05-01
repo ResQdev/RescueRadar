@@ -1,5 +1,25 @@
 # Changelog
 
+## [v1.1.0] - 2025-05-01
+
+### ✅ Verbesserte Datenintegrität & Session-Handling
+
+- 🚑 **Einsatzdaten werden zuverlässig gelöscht**, auch wenn Nutzer den Einsatz nicht manuell beenden
+- 🧠 **Race-Condition verhindert**, bei der Standortdaten nach dem Löschen erneut gespeichert wurden
+- 🧹 `dashboard.html`: `toggleTracking()`-Funktion überarbeitet – Löschung wird abgewartet, bevor Tracking deaktiviert wird
+- 🔄 `stop_mission`: JSON-Fallback für `navigator.sendBeacon()` implementiert → saubere Löschung auch bei Tab-Schließung
+- 🧼 **Endnutzerdaten-Fallback** auf 5 Minuten reduziert → weniger Datenmüll
+
+### 🔒 Stabilität & Sicherheit
+
+- 🚨 Keine falsch-positiven Warnmeldungen mehr durch verwaiste Einsatzdaten
+- 💡 Standortübertragung von Behördenfahrzeugen wird blockiert, wenn `vehicle_id` ungültig ist
+- ✅ `clearInterval()` + `sendBeacon()` greifen zuverlässig ineinander
+
+---
+
+Diese Version macht RescueRadar deutlich robuster im Live-Betrieb.
+
 ## [1.0.3-rollback] - 2025-04-30
 ### Geändert
 - WebSocket-Integration vollständig entfernt

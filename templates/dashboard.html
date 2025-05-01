@@ -9,37 +9,52 @@
         let trackingInterval = null;
 
         function toggleTracking(vehicleId) {
-            tracking = !tracking;
+        const button = document.getElementById("radarButton");
 
-            const button = document.getElementById("radarButton");
-            button.textContent = tracking ? "Einsatz beenden" : "Einsatz starten";
-            button.className = tracking ? "btn btn-danger w-100 py-3" : "btn btn-success w-100 py-3";
+        if (!tracking) {
+            // STARTEN
+            tracking = true;
+            button.textContent = "Einsatz beenden";
+            button.className = "btn btn-danger w-100 py-3";
 
-            if (tracking) {
-                trackingInterval = setInterval(() => {
-                    navigator.geolocation.getCurrentPosition(position => {
-                        fetch("/update_location", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                vehicle_id: vehicleId,
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
-                            })
-                        });
+            trackingInterval = setInterval(() => {
+                navigator.geolocation.getCurrentPosition(position => {
+                    fetch("/update_location", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            vehicle_id: vehicleId,
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        })
                     });
-                }, 2000);
-            } else {
-                clearInterval(trackingInterval);
-
-                // NEU: Standortdaten bei Einsatzende löschen
-                fetch("/stop_mission", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ vehicle_id: vehicleId })
                 });
-            }
+            }, 2000);
+        } else {
+            // BEENDEN
+            clearInterval(trackingInterval);
+
+            // Erst Standort-Übertragung stoppen, dann löschen
+            fetch("/stop_mission", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ vehicle_id: vehicleId })
+            }).then(() => {
+                tracking = false;
+                button.textContent = "Einsatz starten";
+                button.className = "btn btn-success w-100 py-3";
+            });
         }
+    }
+
+        window.addEventListener("beforeunload", function (e) {
+            if (tracking) {
+                navigator.sendBeacon("/stop_mission", JSON.stringify({
+                    vehicle_id: "{{ vehicle_id }}"
+                }));
+            }
+        });
+
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
