@@ -1,5 +1,23 @@
 # Changelog
 
+## [v1.2.0] – 2025-05-01
+
+### 📡 Adaptives Tracking für Endnutzer
+
+- 🚶‍♂️ Standort wird **alle 2 Sekunden** gesendet, wenn Bewegung erkannt wird (>5 m)
+- 🕒 Bei Stillstand erfolgt Standortupdate **alle 10 Sekunden**
+- ⛽ Reduziert Serverlast und unnötige Requests ohne Einbußen bei der Sicherheit
+- 🧠 `getDistance()` nutzt Haversine-Formel für präzise Messung
+
+### 🔊 Verbesserte Benutzerführung
+
+- 🚨 **Warnmeldung blendet sich automatisch aus**, wenn nach 10 Sekunden keine Einsatzfahrzeuge mehr erkannt werden
+- ⚠️ Keine Flackereffekte – intelligenter Timeout-Reset bei neuer Erkennung
+
+---
+
+Diese Version verbessert die Reaktionszeit und spart gleichzeitig Systemressourcen – ideal für mobile Nutzer.
+
 ## [v1.1.0] - 2025-05-01
 
 ### ✅ Verbesserte Datenintegrität & Session-Handling

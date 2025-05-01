@@ -139,75 +139,126 @@
 <!-- Warnsound -->
 <audio id="alertSound" src="{{ url_for('static', filename='warnsound_v3.mp3') }}"></audio>
 
+<!-- Optimiertes Tracking mit adaptivem Standortversand-->
 <script>
-let trackingActive = false;
-let trackingInterval = null;
-const audio = document.getElementById("alertSound");
-let lastWarningState = false;
-
-let sessionId = "{{ session.get('vehicle_id', '') }}";
-if (!sessionId) {
-  sessionId = sessionStorage.getItem("session_id") || 'session-' + Math.random().toString(36).substring(2, 15);
-  sessionStorage.setItem("session_id", sessionId);
-}
-
-document.getElementById("trackingButton").addEventListener("click", () => {
-  trackingActive = !trackingActive;
-  const button = document.getElementById("trackingButton");
-  button.textContent = trackingActive ? "Beenden" : "Starten";
-  button.className = trackingActive ? "btn btn-danger tracking-button" : "btn btn-success tracking-button";
-
-  if (trackingActive) {
-    audio.play().then(() => {
-      audio.pause();
-      audio.currentTime = 0;
-    }).catch(() => {});
-    trackingInterval = setInterval(sendUserLocation, 5000);
-  } else {
-    clearInterval(trackingInterval);
-
-    // Endnutzer-Standortdaten löschen
-    fetch("/stop_tracking", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId })
-    });
-
-    // Session-ID zurücksetzen
-    sessionStorage.removeItem("session_id");
+  let trackingActive = false;
+  let trackingInterval = null;
+  const audio = document.getElementById("alertSound");
+  let lastWarningState = false;
+  
+  let sessionId = "{{ session.get('vehicle_id', '') }}";
+  if (!sessionId) {
+    sessionId = sessionStorage.getItem("session_id") || 'session-' + Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("session_id", sessionId);
   }
-});
-
-function showWarning(active) {
-  const messageElement = document.getElementById("warningMessage");
-  if (active) {
-    messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
-    messageElement.className = "alert alert-danger";
-    if (!lastWarningState) {
-      audio.play().catch(() => {});
+  
+  let lastSentPosition = null;
+  let lastSendTime = 0;
+  
+  document.getElementById("trackingButton").addEventListener("click", () => {
+    trackingActive = !trackingActive;
+    const button = document.getElementById("trackingButton");
+    button.textContent = trackingActive ? "Beenden" : "Starten";
+    button.className = trackingActive ? "btn btn-danger tracking-button" : "btn btn-success tracking-button";
+  
+    if (trackingActive) {
+      // Trigger einmaliger Play für iOS/Chrome-Blocker
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {});
+      trackingInterval = setInterval(sendUserLocation, 2000);
+    } else {
+      clearInterval(trackingInterval);
+  
+      // Endnutzer-Standortdaten löschen
+      fetch("/stop_tracking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+  
+      sessionStorage.removeItem("session_id");
     }
-  } else {
-    messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
-    messageElement.className = "alert alert-success";
-  }
-  lastWarningState = active;
-}
-
-function sendUserLocation() {
-  navigator.geolocation.getCurrentPosition(position => {
-    fetch("/update_location_public", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: sessionId,
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      })
-    })
-    .then(response => response.json())
-    .then(data => showWarning(data.nearby));
   });
-}
-</script>
+  
+  function sendUserLocation() {
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const now = Date.now();
+  
+      let shouldSend = false;
+  
+      if (!lastSentPosition) {
+        shouldSend = true;
+      } else {
+        const dist = getDistance(lat, lon, lastSentPosition.lat, lastSentPosition.lon);
+        const timeSinceLast = now - lastSendTime;
+  
+        if (dist > 5 && timeSinceLast > 2000) {
+          shouldSend = true;  // Bewegung erkannt -> Standort alle 2 Sekunden
+        } else if (timeSinceLast > 10000) {
+          shouldSend = true;  // Stillstand -> Standort alle 10 Sekunden
+        }
+      }
+  
+      if (shouldSend) {
+        fetch("/update_location_public", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            latitude: lat,
+            longitude: lon
+          })
+        })
+        .then(response => response.json())
+        .then(data => showWarning(data.nearby));
+  
+        lastSentPosition = { lat, lon };
+        lastSendTime = now;
+      }
+    });
+  }
+  
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const dphi = (lat2 - lat1) * Math.PI / 180;
+    const dlambda = (lon2 - lon1) * Math.PI / 180;
+  
+    const a = Math.sin(dphi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlambda / 2) ** 2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+  
+  let warningTimeout = null;
+
+  function showWarning(active) {
+    const messageElement = document.getElementById("warningMessage");
+
+    if (active) {
+      messageElement.innerText = "🚨 Achtung, Einsatzfahrzeug! Bitte sorge für eine freie Fahrt!";
+      messageElement.className = "alert alert-danger";
+
+      if (!lastWarningState) {
+        audio.play().catch(() => {});
+      }
+
+      // Timer zurücksetzen, falls neue Warnung kommt
+      clearTimeout(warningTimeout);
+      warningTimeout = setTimeout(() => {
+        showWarning(false);  // Auto-Entwarnung nach 10s
+      }, 10000);
+    } else {
+      messageElement.innerText = "✅ Aktuell liegen keine Warnungen vor.";
+      messageElement.className = "alert alert-success";
+      clearTimeout(warningTimeout); // Entwarnung → Timer stoppen
+    }
+
+    lastWarningState = active;
+  }
+  </script>  
 </body>
 </html>
