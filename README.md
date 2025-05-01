@@ -9,7 +9,7 @@
 
 - Behörden-Login mit Zugangsdaten, die über das Admin-Portal erstellt werden können
 - Einsatz-Dashboard mit Start/Stopp-Button für die Standortübertragung
-- Speicherung der Fahrzeugpositionen alle 2 Sekunden
+- Speicherung der Fahrzeugpositionen dynamisch (10 Sekunden bei Stillstand, 2 Sekunden bei Bewegung)
 - Endbenutzeransicht mit automatischer Standorterkennung im Browser
 - Tracking-Button für Endnutzer: Manuelles Starten und Stoppen der eigenen Standortübertragung
 - **Live-Abgleich** zwischen Einsatzfahrzeugen und Endnutzern (Radius: 100 Meter)
@@ -73,8 +73,16 @@ Kennwort: *(aus deiner .env Datei)*
 
 ## 📦 Deployment
 
-- Lokale oder gehostete MySQL / SQLite
-- Kompatibel mit PythonAnywhere, Railway, Render
+Die Anwendung läuft produktionsbereit auf:
+
+- **Frontend + Backend:** [Render](https://render.com)
+- **Datenbank:** [Railway (MySQL)](https://railway.app)
+
+### 🔧 .env Datei (Beispiel)
+
+```env
+DATABASE_URL=mysql+pymysql://root:<PASSWORD>@tramway.proxy.rlwy.net:29341/railway
+SECRET_KEY=dein_geheimer_schlüssel
 
 ## ⚠️ Hinweise
 

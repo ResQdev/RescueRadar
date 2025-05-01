@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.2.1] – 2025-05-01
+
+### 🗃️ Datenbankmigration
+
+- 🔁 Datenbank von **db4free.net zu Railway** migriert
+- 🚀 Neue `DATABASE_URL` mit stabilem Cloud-Host
+- 🔐 Verbindung mit `pymysql` + SQLAlchemy optimiert
+- 🧪 Fehlerhafte Verbindungsabbrüche (OperationalError) gehören der Vergangenheit an
+
+### 🛠️ Verbesserungen
+
+- Render `.env`-Management dokumentiert
+- Lokale Tests vs. Cloud-Verhalten klar abgegrenzt
+- Vorbereitung für Deployment-Doku und künftige Mobil-Integration
+
 ## [v1.2.0] – 2025-05-01
 
 ### 📡 Adaptives Tracking für Endnutzer
